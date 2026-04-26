@@ -6,225 +6,102 @@
     <title>Spy Game Pro</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root {
-            --bg: #121214;
-            --card-bg: #1e1e24;
-            --accent: #6b48ff;
-            --text: #ffffff;
-            --spy-color: #ff4757;
-            --loc-color: #2ed573;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            overflow: hidden;
-            text-align: center;
-        }
-        .screen {
-            display: none;
-            width: 90%;
-            max-width: 400px;
-            background: var(--card-bg);
-            padding: 30px 20px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            animation: fadeIn 0.3s ease-in-out;
-        }
-        .screen.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        h1 { margin-top: 0; font-size: 24px; }
-        .setting-row { display: flex; justify-content: space-between; align-items: center; margin: 15px 0; }
-        select, input {
-            background: #2a2a32; color: white; border: 1px solid #3a3a42;
-            padding: 10px; border-radius: 10px; font-size: 16px; width: 120px;
-        }
-        button {
-            background: var(--accent); color: white; border: none;
-            padding: 15px; border-radius: 12px; font-size: 18px; font-weight: bold;
-            width: 100%; cursor: pointer; margin-top: 20px; transition: 0.2s;
-        }
-        button:active { transform: scale(0.95); }
-        
-        /* Карточка роли */
-        .role-card {
-            background: #2a2a32; height: 300px; border-radius: 15px;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            font-size: 24px; margin-bottom: 20px; cursor: pointer;
-            border: 2px dashed #4a4a52;
-        }
-        .role-card.revealed { border: 2px solid var(--accent); background: #1e1e24; }
-        
-        #timerDisplay { font-size: 48px; font-weight: bold; margin: 20px 0; color: var(--loc-color); }
+        :root { --bg: #121214; --card: #1e1e24; --accent: #6b48ff; --text: #ffffff; }
+        body { font-family: sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; text-align: center; }
+        .screen { display: none; width: 90%; background: var(--card); padding: 30px 20px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .active { display: block; }
+        h1 { font-size: 24px; margin-bottom: 20px; }
+        .row { display: flex; justify-content: space-between; margin: 15px 0; font-size: 18px; }
+        input, select { background: #2a2a32; color: white; border: 1px solid #444; padding: 8px; border-radius: 10px; width: 100px; }
+        button { background: var(--accent); color: white; border: none; padding: 15px; border-radius: 15px; font-size: 18px; font-weight: bold; width: 100%; margin-top: 20px; }
+        .role-card { background: #2a2a32; height: 250px; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 22px; border: 2px dashed #555; margin: 20px 0; }
+        #timer { font-size: 50px; color: #2ed573; margin: 20px 0; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div id="screen-setup" class="screen active">
-        <h1>🕵️ Настройки игры</h1>
-        <div class="setting-row">
-            <span>Кол-во игроков:</span>
-            <input type="number" id="playerCount" value="3" min="3" max="15">
-        </div>
-        <div class="setting-row">
-            <span>Кол-во шпионов:</span>
-            <input type="number" id="spyCount" value="1" min="1" max="5">
-        </div>
-        <div class="setting-row">
-            <span>Категория:</span>
-            <select id="categorySelect">
-                <option value="world">🌍 Путешествия</option>
-                <option value="fiction">🏰 Вымышленные миры</option>
-                <option value="prof">🏢 Места работы</option>
+    <div id="setup" class="screen active">
+        <h1>🕵️ Настройка игры</h1>
+        <div class="row"><span>Игроки:</span><input type="number" id="pCount" value="3"></div>
+        <div class="row"><span>Шпионы:</span><input type="number" id="sCount" value="1"></div>
+        <div class="row"><span>Тема:</span>
+            <select id="cat">
+                <option value="travel">🌍 Путешествия</option>
+                <option value="work">🏢 Работа</option>
+                <option value="fun">🎉 Развлечения</option>
             </select>
         </div>
-        <button onclick="startGame()">СОЗДАТЬ ИГРУ</button>
+        <button onclick="initGame()">ПОЕХАЛИ!</button>
     </div>
 
-    <div id="screen-role" class="screen">
-        <h2 id="playerTurnText">Игрок 1</h2>
-        <p>Нажми на карточку, чтобы узнать роль. Никому не показывай!</p>
-        
-        <div class="role-card" id="card" onclick="flipCard()">
-            <span id="cardContent">👁️ ПОСМОТРЕТЬ</span>
-        </div>
-        
-        <button id="nextBtn" style="display:none;" onclick="nextPlayer()">ПОНЯТНО, ПЕРЕДАТЬ ДАЛЬШЕ</button>
+    <div id="roles" class="screen">
+        <h2 id="pNum">Игрок 1</h2>
+        <div class="role-card" id="mainCard" onclick="showRole()">ЖМИ, ЧТОБЫ УЗНАТЬ</div>
+        <button id="nextBtn" style="display:none;" onclick="nextP()">СЛЕДУЮЩИЙ</button>
     </div>
 
-    <div id="screen-timer" class="screen">
-        <h1>⏳ Обсуждение</h1>
-        <div id="timerDisplay">05:00</div>
-        <button onclick="toggleTimer()" id="timerBtn">ПАУЗА</button>
-        <button onclick="window.Telegram.WebApp.close()" style="background:#444;">ЗАВЕРШИТЬ ИГРУ</button>
+    <div id="game" class="screen">
+        <h1>⌛ Время пошло!</h1>
+        <div id="timer">05:00</div>
+        <button onclick="location.reload()">ЗАКОНЧИТЬ</button>
     </div>
 
     <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-
-        const CATEGORIES = {
-            "world": ["Египет", "Париж", "Токио", "Нью-Йорк", "Стамбул", "Лондон"],
-            "fiction": ["Хогвартс", "Мордор", "Нарния", "Матрица", "Готэм", "Атлантида"],
-            "prof": ["Больница", "Полицейский участок", "Школа", "Ресторан", "Пожарная часть"]
+        const tg = window.Telegram.WebApp; tg.expand();
+        const DATA = {
+            travel: ["Париж", "Дубай", "Токио", "Нью-Йорк", "Египет"],
+            work: ["Больница", "Офис Google", "Завод", "Школа", "Стройка"],
+            fun: ["Цирк", "Аквапарк", "Кинотеатр", "Ночной клуб", "Зоопарк"]
         };
+        let gameRoles = [], curr = 0, isRevealed = false;
 
-        let roles = [];
-        let currentPlayerIndex = 0;
-        let cardRevealed = false;
-        
-        // Таймер
-        let timeLeft = 300; // 5 минут
-        let timerInterval = null;
-        let isTimerRunning = false;
+        function initGame() {
+            let p = parseInt(document.getElementById('pCount').value);
+            let s = parseInt(document.getElementById('sCount').value);
+            let cat = document.getElementById('cat').value;
+            let loc = DATA[cat][Math.floor(Math.random()*DATA[cat].length)];
+            
+            gameRoles = Array(p).fill(loc);
+            for(let i=0; i<s; i++) gameRoles[i] = "ШПИОН 🕵️";
+            gameRoles.sort(() => Math.random() - 0.5);
 
-        function showScreen(id) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
+            document.getElementById('setup').classList.remove('active');
+            document.getElementById('roles').classList.add('active');
         }
 
-        function startGame() {
-            const players = parseInt(document.getElementById('playerCount').value);
-            const spies = parseInt(document.getElementById('spyCount').value);
-            const cat = document.getElementById('categorySelect').value;
-
-            if (spies >= players) {
-                tg.showAlert("Шпионов не может быть больше или равно мирным!");
-                return;
-            }
-
-            // Генерируем локацию
-            const locList = CATEGORIES[cat];
-            const location = locList[Math.floor(Math.random() * locList.length)];
-
-            // Создаем массив ролей
-            roles = Array(players).fill(location);
-            for (let i = 0; i < spies; i++) roles[i] = "ШПИОН";
-            
-            // Перемешиваем
-            roles.sort(() => Math.random() - 0.5);
-
-            currentPlayerIndex = 0;
-            updateRoleScreen();
-            showScreen('screen-role');
-        }
-
-        function updateRoleScreen() {
-            document.getElementById('playerTurnText').innerText = `Игрок ${currentPlayerIndex + 1} из ${roles.length}`;
-            cardRevealed = false;
-            const card = document.getElementById('card');
-            card.classList.remove('revealed');
-            document.getElementById('cardContent').innerHTML = "👁️ НАЖМИ, ЧТОБЫ УЗНАТЬ РОЛЬ";
-            document.getElementById('cardContent').style.color = "var(--text)";
-            document.getElementById('nextBtn').style.display = "none";
-        }
-
-        function flipCard() {
-            if (cardRevealed) return;
-            cardRevealed = true;
-            const role = roles[currentPlayerIndex];
-            const card = document.getElementById('card');
-            const content = document.getElementById('cardContent');
-            
-            card.classList.add('revealed');
-            
-            if (role === "ШПИОН") {
-                content.innerHTML = `<span style="color:var(--spy-color); font-size:32px;">🕵️ ТЫ ШПИОН!</span>`;
-            } else {
-                content.innerHTML = `📍 Локация:<br><span style="color:var(--loc-color); font-size:28px;">${role}</span>`;
-            }
-            
+        function showRole() {
+            if(isRevealed) return;
+            const card = document.getElementById('mainCard');
+            card.innerText = gameRoles[curr];
+            card.style.border = "2px solid #6b48ff";
             document.getElementById('nextBtn').style.display = "block";
-            tg.HapticFeedback.impactOccurred('heavy'); // Вибрация
+            isRevealed = true;
+            tg.HapticFeedback.impactOccurred('medium');
         }
 
-        function nextPlayer() {
-            currentPlayerIndex++;
-            if (currentPlayerIndex < roles.length) {
-                updateRoleScreen();
+        function nextP() {
+            curr++;
+            if(curr < gameRoles.length) {
+                isRevealed = false;
+                document.getElementById('pNum').innerText = "Игрок " + (curr + 1);
+                document.getElementById('mainCard').innerText = "ЖМИ, ЧТОБЫ УЗНАТЬ";
+                document.getElementById('mainCard').style.border = "2px dashed #555";
+                document.getElementById('nextBtn').style.display = "none";
             } else {
-                showScreen('screen-timer');
+                document.getElementById('roles').classList.remove('active');
+                document.getElementById('game').classList.add('active');
                 startTimer();
             }
         }
 
         function startTimer() {
-            if (timerInterval) clearInterval(timerInterval);
-            isTimerRunning = true;
-            timerInterval = setInterval(() => {
-                if (timeLeft <= 0) {
-                    clearInterval(timerInterval);
-                    tg.showAlert("⏰ Время вышло! Пора голосовать.");
-                    return;
-                }
-                timeLeft--;
-                updateTimerDisplay();
+            let time = 300;
+            setInterval(() => {
+                if(time <= 0) return;
+                time--;
+                let m = Math.floor(time/60), s = time%60;
+                document.getElementById('timer').innerText = `${m}:${s<10?'0'+s:s}`;
             }, 1000);
-        }
-
-        function toggleTimer() {
-            const btn = document.getElementById('timerBtn');
-            if (isTimerRunning) {
-                clearInterval(timerInterval);
-                btn.innerText = "ПРОДОЛЖИТЬ";
-                isTimerRunning = false;
-            } else {
-                startTimer();
-                btn.innerText = "ПАУЗА";
-            }
-        }
-
-        function updateTimerDisplay() {
-            const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
-            const s = (timeLeft % 60).toString().padStart(2, '0');
-            document.getElementById('timerDisplay').innerText = `${m}:${s}`;
         }
     </script>
 </body>
