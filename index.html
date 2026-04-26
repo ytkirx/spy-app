@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spy Game Pro</title>
+    <title>Spy Game</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #1a1a1a;
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #212121;
             color: white;
-            text-align: center;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -20,69 +19,68 @@
         }
         .card {
             background: #2c2c2c;
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            padding: 40px;
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            text-align: center;
             width: 80%;
         }
         button {
-            background: #0088cc;
+            background: #673ab7;
             color: white;
             border: none;
-            padding: 15px 25px;
-            border-radius: 12px;
-            font-size: 18px;
+            padding: 20px 30px;
+            border-radius: 15px;
+            font-size: 20px;
             font-weight: bold;
             cursor: pointer;
-            transition: 0.3s;
+            width: 100%;
         }
-        button:active { transform: scale(0.95); }
-        .role-box {
+        .secret-info {
             display: none;
             margin-top: 20px;
             padding: 20px;
-            border: 2px dashed #555;
-            border-radius: 10px;
+            border: 2px dashed #673ab7;
+            border-radius: 15px;
+            font-size: 24px;
         }
-        .spy-text { color: #ff4757; font-size: 24px; }
-        .loc-text { color: #2ed573; font-size: 24px; }
+        .spy { color: #ff5252; }
+        .location { color: #4caf50; }
     </style>
 </head>
 <body>
     <div class="card">
-        <h1>🕵️ SPY GAME</h1>
-        <div id="setup">
-            <p>Нажми кнопку, чтобы узнать свою роль в этом раунде</p>
-            <button onclick="getRole()">УЗНАТЬ РОЛЬ</button>
-        </div>
+        <h1 id="title">🕵️ Spy Game</h1>
+        <p id="desc">Нажми кнопку, чтобы узнать свою роль</p>
+        
+        <button id="mainBtn" onclick="revealRole()">УЗНАТЬ РОЛЬ</button>
 
-        <div id="result" class="role-box">
-            <p>Твоя роль:</p>
-            <div id="roleContent"></div>
-            <br>
-            <button onclick="window.Telegram.WebApp.close()">ПОНЯТНО</button>
-        </div>
+        <div id="secretBox" class="secret-info">
+            </div>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // Список локаций (можешь менять прямо тут)
-        const locations = ["Заброшенный цирк", "База на Марсе", "Секретная кухня", "Бункер"];
+        function revealRole() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const role = urlParams.get('role'); // Получаем роль из ссылки
+            const loc = urlParams.get('loc');   // Получаем локацию из ссылки
 
-        function getRole() {
-            document.getElementById('setup').style.display = 'none';
-            const resBox = document.getElementById('result');
-            const content = document.getElementById('roleContent');
-            resBox.style.display = 'block';
+            const btn = document.getElementById('mainBtn');
+            const box = document.getElementById('secretBox');
+            const title = document.getElementById('title');
+            const desc = document.getElementById('desc');
 
-            // Логика: шанс 1 к 3, что ты шпион (для теста)
-            if (Math.random() < 0.3) {
-                content.innerHTML = '<span class="spy-text">🕵️ ТЫ ШПИОН!</span><p>Твоя цель: не выдать себя.</p>';
+            btn.style.display = 'none';
+            desc.style.display = 'none';
+            box.style.display = 'block';
+
+            if (role === 'spy') {
+                box.innerHTML = '<span class="spy">🕵️ ТЫ ШПИОН!</span><br><small>Твоя задача — не выдать себя</small>';
             } else {
-                const loc = locations[Math.floor(Math.random() * locations.length)];
-                content.innerHTML = '<span class="loc-text">📍 ' + loc + '</span><p>Найди шпиона!</p>';
+                box.innerHTML = '📍 Локация:<br><span class="location">' + (loc || 'Неизвестно') + '</span>';
             }
         }
     </script>
