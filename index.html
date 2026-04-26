@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spy Game Mini App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: var(--tg-theme-bg-color);
+            color: var(--tg-theme-text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container { text-align: center; padding: 20px; }
+        button {
+            background-color: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-text-color);
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+        .status { margin-top: 20px; font-weight: bold; color: #e74c3c; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🕵️ Spy Game</h1>
+        <p>Нажми кнопку, чтобы войти в игру</p>
+        <button id="joinBtn">ВСТУПИТЬ В ИГРУ</button>
+        <div id="status" class="status"></div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // Развернуть на весь экран
+
+        const btn = document.getElementById('joinBtn');
+        const status = document.getElementById('status');
+
+        btn.addEventListener('click', () => {
+            // Отправляем данные боту
+            tg.sendData("user_joined_via_webapp");
+            status.innerText = "Заявка отправлена! Закрой окно.";
+
+            // Через секунду закрываем мини-приложение
+            setTimeout(() => { tg.close(); }, 1500);
+        });
+    </script>
+</body>
+</html>
